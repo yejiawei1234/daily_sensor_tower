@@ -7,7 +7,7 @@ import aiohttp
 import asyncio
 import time
 import pprint
-from .mytoken import Mytoken
+from mytoken import Mytoken
 
 # https://api.sensortower.com:443/v1/ios/apps?app_ids=495582516&auth_token=
 
