@@ -201,6 +201,13 @@ def check_data(gameid):
     return country, cn_type, en_rate
 
 
+def no_long_name(gamename):
+    if len(gamename) > 30:
+        return gamename[:30]
+    else:
+        return gamename
+
+
 def sheet_main(sheetname, imagefolder):
     ws = wb.create_sheet(title=sheetname)
     gameid = find_id(imagefolder)
@@ -274,5 +281,6 @@ sub_folder_path.sort()
 input_ = zip(right_sub_folder, sub_folder_path)
 for gamename, imagefolder in input_:
     print(gamename, imagefolder)
+    gamename = no_long_name(gamename)
     sheet_main(sheetname=gamename, imagefolder=imagefolder)
 wb.save(output_path)
