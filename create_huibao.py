@@ -57,7 +57,8 @@ country_map = {"us": "美国",
                "gb": "英国",
                "kr": "韩国",
                "cn": "中国",
-               "tw": "台湾",}
+               "tw": "台湾",
+               "ru": "俄罗斯"}
 paid_type_map = {"free": "免费",
                  "paid": "付费",
                  "gross": "畅销"}
