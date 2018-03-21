@@ -8,6 +8,7 @@ import asyncio
 import time
 import pprint
 from mytoken import Mytoken
+from datetime import datetime
 
 # https://api.sensortower.com:443/v1/ios/apps?app_ids=495582516&auth_token=
 
@@ -24,6 +25,7 @@ class MyGameInfo:
         self.app_url = None
         self.app_id = None
         self.description = None
+        self.release_date = None
 
     def unpack_info(self):
         self.name = self.json.get("apps")[0].get('name')
@@ -31,6 +33,7 @@ class MyGameInfo:
         self.icon_url = self.json.get("apps")[0].get('icon_url')
         self.app_id = self.json.get("apps")[0].get('app_id')
         self.description = list(self.json.get("apps")[0].get('description'))
+        self.release_date = self.json.get("apps")[0].get('release_date')
         if self.json.get("apps")[0].get('screenshot_urls'):
             for i in self.json.get("apps")[0].get('screenshot_urls'):
                 self.screenshot_urls.append(i)
@@ -80,6 +83,9 @@ class pdb1:
             for i in self.game.description:
                 f.write(i)
         with open('{}/{}_.txt'.format(self.sub_dir_path, self.game.app_id), 'w') as f:
+            f.write('')
+        app_time = datetime.fromtimestamp(game.release_date).strftime('%Y-%m-%d')
+        with open('{}/{}-.txt'.format(self.sub_dir_path, app_time), 'w') as f:
             f.write('')
 
     async def download_pic(self, url, p_id):

@@ -98,12 +98,22 @@ gross_rank_map = {'us': '52',
                   'gb': '68',
                   'tw': '70'}
 
+
 def find_id(imagefolder):
     idfile = imagefolder + "/*_.txt"
     idfilename = glob.glob(idfile)
     id_ = os.path.basename(idfilename[0])
     gameid = id_.rsplit('.', 1)[0].strip('_')
     return gameid
+
+
+def find_time(imagefolder):
+    idfile = imagefolder + "/*-.txt"
+    idfilename = glob.glob(idfile)
+    time_ = os.path.basename(idfilename[0])
+    gametime = time_.rsplit('.', 1)[0].strip('-')
+    return gametime
+
 
 def find_small_icon(imagefolder):
     iconfile = imagefolder + "/small_icon.png"
@@ -136,7 +146,16 @@ sub_dir_list = find_sub(home)
 
 df1 = df.copy()
 
-for i in df.index:
+game_time_dict = {}
+df1['id'] = df1['id'].astype(str)
+
+for i in sub_dir_list:
+    gameid = find_id(i)
+    gametime = find_time(i)
+    game_time_dict[gameid] = gametime
+
+
+for i in df1.index:
     game_type = df.at[i, 'type']
     if game_type == 'free':
         country = df.at[i, 'country']
@@ -144,10 +163,10 @@ for i in df.index:
         rank_cell = 'F' + free_rank_map.get(country)
         up_cell = 'G' + free_rank_map.get(country)
         game_type_cell = 'H' + free_rank_map.get(country)
-        add_name(ws, name_cell, df.at[i, 'app_name'])
-        add_rank(ws, rank_cell, df.at[i, 'now'])
-        add_up(ws, up_cell, df.at[i, 'up'])
-        add_type(ws, game_type_cell, df.at[i, '类型'])
+        add_name(ws, name_cell, df1.at[i, 'app_name'])
+        add_rank(ws, rank_cell, df1.at[i, 'now'])
+        add_up(ws, up_cell, game_time_dict.get(df1.at[i, 'id']))
+        add_type(ws, game_type_cell, df1.at[i, '类型'])
         df1.at[i, 'cell'] = 'D' + free_rank_map.get(country)
     elif game_type == 'paid':
         country = df.at[i, 'country']
@@ -155,10 +174,10 @@ for i in df.index:
         rank_cell = 'F' + paid_rank_map.get(country)
         up_cell = 'G' + paid_rank_map.get(country)
         game_type_cell = 'H' + paid_rank_map.get(country)
-        add_name(ws, name_cell, df.at[i, 'app_name'])
-        add_rank(ws, rank_cell, df.at[i, 'now'])
-        add_up(ws, up_cell, df.at[i, 'up'])
-        add_type(ws, game_type_cell, df.at[i, '类型'])
+        add_name(ws, name_cell, df1.at[i, 'app_name'])
+        add_rank(ws, rank_cell, df1.at[i, 'now'])
+        add_up(ws, up_cell, game_time_dict.get(df1.at[i, 'id']))
+        add_type(ws, game_type_cell, df1.at[i, '类型'])
         df1.at[i, 'cell'] = 'D' + paid_rank_map.get(country)
     else:
         country = df.at[i, 'country']
@@ -166,13 +185,12 @@ for i in df.index:
         rank_cell = 'F' + gross_rank_map.get(country)
         up_cell = 'G' + gross_rank_map.get(country)
         game_type_cell = 'H' + gross_rank_map.get(country)
-        add_name(ws, name_cell, df.at[i, 'app_name'])
-        add_rank(ws, rank_cell, df.at[i, 'now'])
-        add_up(ws, up_cell, df.at[i, 'up'])
-        add_type(ws, game_type_cell, df.at[i, '类型'])
+        add_name(ws, name_cell, df1.at[i, 'app_name'])
+        add_rank(ws, rank_cell, df1.at[i, 'now'])
+        add_up(ws, up_cell, game_time_dict.get(df1.at[i, 'id']))
+        add_type(ws, game_type_cell, df1.at[i, '类型'])
         df1.at[i, 'cell'] = 'D' + gross_rank_map.get(country)
 
-df1['id'] = df1['id'].astype(str)
 
 for i in sub_dir_list:
     game_id = find_id(i)
@@ -181,7 +199,6 @@ for i in sub_dir_list:
     add_icon(ws, cell[0], i)
     # if cell:
     #     add_icon(ws, cell[0], i)
-
 
 for row in ws.iter_rows(min_row=10, max_row=27, min_col=3, max_col=9):
     for cell in row:
