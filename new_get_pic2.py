@@ -84,7 +84,10 @@ class pdb1:
                 f.write(i)
         with open('{}/{}_.txt'.format(self.sub_dir_path, self.game.app_id), 'w') as f:
             f.write('')
-        app_time = datetime.fromtimestamp(game.release_date).strftime('%Y-%m-%d')
+        if int(game.release_date) == 0:
+            app_time = datetime.today().strftime('%Y-%m-%d')
+        else:
+            app_time = datetime.fromtimestamp(game.release_date).strftime('%Y-%m-%d')
         with open('{}/{}-.txt'.format(self.sub_dir_path, app_time), 'w') as f:
             f.write('')
 
@@ -112,7 +115,6 @@ class pdb1:
 
                 except:
                     pass
-
 
     async def download_icon(self, url):
         async with aiohttp.ClientSession() as session:
