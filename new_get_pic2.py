@@ -83,8 +83,10 @@ async def get_my_app_info(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             info_list = await resp.json()
-
-    return info_list
+            df = pd.DataFrame(info_list)
+            df.fillna(0, inplace=True)
+            print(df.head())
+    return df
 
 
 class pdb1:
@@ -195,7 +197,7 @@ if __name__ == '__main__':
     for game in g_list:
         p = pdb1(game, dir)
         p.write()
-        unified_id_url_list.append(game.unified_id)
+        unified_id_url_list.append(get_unified_id_url(game.unified_id))
         if len(game.screenshot_urls) >= 5:
             screenshot_5urls = game.screenshot_urls[:5]
         else:
@@ -210,6 +212,10 @@ if __name__ == '__main__':
 
     pic_loop = asyncio.get_event_loop()
     pic_loop.run_until_complete(asyncio.wait(pic_tasks))
+
+    unified_loop = asyncio.get_event_loop()
+    unified_loop.run_until_complete(asyncio.wait(unified_task))
+
     t2 = time.time()
     print('Time: ', t2 - t1)
 
