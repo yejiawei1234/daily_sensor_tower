@@ -8,7 +8,7 @@ import asyncio
 import time
 import pprint
 from mytoken import Mytoken
-from datetime import datetime
+from datetime import datetime, date, timedelta
 
 # https://api.sensortower.com:443/v1/ios/apps?app_ids=495582516&auth_token=
 
@@ -34,6 +34,7 @@ class MyGameInfo:
         self.app_id = self.json.get("apps")[0].get('app_id')
         self.description = list(self.json.get("apps")[0].get('description'))
         self.release_date = self.json.get("apps")[0].get('release_date')
+        self.unified_id = self.json.get("apps")[0].get('unified_app_id')
         if self.json.get("apps")[0].get('screenshot_urls'):
             for i in self.json.get("apps")[0].get('screenshot_urls'):
                 self.screenshot_urls.append(i)
@@ -59,6 +60,16 @@ def get_game_url(app_id):
     return url
 
 
+def get_unified_id_url(unified_id):
+    start_date = (date.today() - timedelta(days=30)).strftime('%Y-%m-%d')
+    end_date = (date.today() - timedelta(days=2)).strftime('%Y-%m-%d')
+    base_url = 'https://api.sensortower.com:443/v1/unified/sales_report_estimates?app_ids='
+    u_id = str(unified_id)
+    end = '&date_granularity=daily&start_date={start_date}&end_date={end_date}&auth_token={token}'.format(start_date=start_date, end_date=end_date, token=Mytoken.info)
+    url = base_url + u_id + end
+    return url
+
+
 async def get_my_app(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
@@ -66,6 +77,14 @@ async def get_my_app(url):
             g = MyGameInfo(app_json)
             g.unpack_info()
     return g
+
+
+async def get_my_app_info(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            info_list = await resp.json()
+
+    return info_list
 
 
 class pdb1:
@@ -172,9 +191,11 @@ if __name__ == '__main__':
         print(i.name)
 
     pic_tasks = []
+    unified_id_url_list = []
     for game in g_list:
         p = pdb1(game, dir)
         p.write()
+        unified_id_url_list.append(game.unified_id)
         if len(game.screenshot_urls) >= 5:
             screenshot_5urls = game.screenshot_urls[:5]
         else:
@@ -182,6 +203,10 @@ if __name__ == '__main__':
         for num, pic in enumerate(screenshot_5urls, start=1):
             pic_tasks.append(asyncio.ensure_future(p.download_pic(pic, num)))
         pic_tasks.append(asyncio.ensure_future(p.download_icon(game.icon_url)))
+
+    unified_task = []
+    for unified_id_url in unified_id_url_list:
+        unified_task.append(asyncio.ensure_future(get_my_app_info(unified_id_url)))
 
     pic_loop = asyncio.get_event_loop()
     pic_loop.run_until_complete(asyncio.wait(pic_tasks))
