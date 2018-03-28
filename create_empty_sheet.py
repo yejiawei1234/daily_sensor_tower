@@ -130,6 +130,19 @@ def add_icon(sheet, imagefolder):
     sheet.add_image(img, cell)
 
 
+def add_rev_pic(sheet, imagefolder):
+    and_rev_path = os.path.join(imagefolder, 'android.png')
+    ios_rev_path = os.path.join(imagefolder, 'ios.png')
+    if os.path.exists(and_rev_path):
+        cell_and = "B30"
+        img = oImage(and_rev_path)
+        sheet.add_image(img, cell_and)
+    if os.path.exists(ios_rev_path):
+        cell_ios = "B11"
+        img = oImage(ios_rev_path)
+        sheet.add_image(img, cell_ios)
+
+
 def add_image(imagefolder, end_num, sheet):
     hor_range = "BGL"
     ver_range = "BEHKN"
@@ -226,6 +239,7 @@ def sheet_main(sheetname, imagefolder):
     for i in fix_blue_num:
         fillcolor(width_range, startnum=i, colorfill=blue_fill, sheet=ws)
     add_icon(sheet=ws, imagefolder=imagefolder)
+    add_rev_pic(sheet=ws, imagefolder=imagefolder)
     end_num = write_descri(sheet=ws, imagefolder=imagefolder)
     end_num = end_num + 3
     end_cel = "B" + str(end_num)

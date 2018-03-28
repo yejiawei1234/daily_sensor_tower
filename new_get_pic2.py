@@ -9,6 +9,8 @@ import time
 import pprint
 from mytoken import Mytoken
 from datetime import datetime, date, timedelta
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # https://api.sensortower.com:443/v1/ios/apps?app_ids=495582516&auth_token=
 
@@ -79,14 +81,64 @@ async def get_my_app(url):
     return g
 
 
-async def get_my_app_info(url):
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            info_list = await resp.json()
-            df = pd.DataFrame(info_list)
-            df.fillna(0, inplace=True)
-            print(df.head())
-    return df
+def clean_df(df):
+    android = pd.DataFrame()
+    ios = pd.DataFrame()
+
+    if ('android_units' and 'android_revenue') in df.columns:
+        df['android_revenue'] = df['android_revenue'] / 100
+        android = df.groupby('country', as_index=False)['android_revenue', 'android_units'].sum()
+        android.sort_values('android_units', inplace=True, ascending=False)
+        if len(android) > 10:
+            android = android.iloc[:10, :]
+    if 'iphone_revenue' in df.columns:
+        if 'ipad_revenue' in df.columns:
+            df['ios_revenue'] = (df['ipad_revenue'] + df['iphone_revenue']) / 100
+            df['ios_units'] = df['ipad_units'] + df['iphone_units']
+            ios = df.groupby('country', as_index=False)['ios_revenue', 'ios_units'].sum()
+            ios.sort_values('ios_units', inplace=True, ascending=False)
+            if len(ios) > 10:
+                ios = ios.iloc[:10, :]
+        else:
+            df['ios_revenue'] = df['iphone_revenue'] / 100
+            df['ios_units'] = df['iphone_units']
+            ios = df.groupby('country', as_index=False)['ios_revenue', 'ios_units'].sum()
+            ios.sort_values('ios_units', inplace=True, ascending=False)
+            if len(ios) > 10:
+                ios = ios.iloc[:10, :]
+    return android, ios
+
+
+def output_and_rev_pic(df, dir, name):
+    sns.set(style="whitegrid")
+    sns.set_context("notebook", font_scale=1.3)
+    f, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(18, 6))
+    grid = sns.factorplot(x="android_units", y="country", data=df, ax=ax1, kind="bar")
+    for p in ax1.patches:
+        ax1.text(p.get_width(), p.get_y() + p.get_height()/2., '%d' % int(p.get_width()), fontsize=13, color='black', ha='right', va='center')
+    ax1.set(ylabel='Country')
+    grid1 = sns.factorplot(x="android_revenue", y="country", data=df, ax=ax2, kind="bar")
+    for p in ax2.patches:
+        ax2.text(p.get_width(), p.get_y() + p.get_height()/2., '%d' % int(p.get_width()), fontsize=13, color='black', ha='right', va='center')
+    ax2.set(ylabel='')
+    f.subplots_adjust(hspace=1, wspace=0.2)
+    f.savefig('{}/{}.png'.format(dir, name))
+
+
+def output_ios_rev_pic(df, dir, name):
+    sns.set(style="whitegrid")
+    sns.set_context("notebook", font_scale=1.3)
+    f, (ax1, ax2) = plt.subplots(1, 2, sharey=True, figsize=(18, 6))
+    grid = sns.factorplot(x="ios_units", y="country", data=df, ax=ax1, kind="bar")
+    for p in ax1.patches:
+        ax1.text(p.get_width(), p.get_y() + p.get_height()/2., '%d' % int(p.get_width()), fontsize=13, color='black', ha='right', va='center')
+    ax1.set(ylabel='Country')
+    grid1 = sns.factorplot(x="ios_revenue", y="country", data=df, ax=ax2, kind="bar")
+    for p in ax2.patches:
+        ax2.text(p.get_width(), p.get_y() + p.get_height()/2., '%d' % int(p.get_width()), fontsize=13, color='black', ha='right', va='center')
+    ax2.set(ylabel='')
+    f.subplots_adjust(hspace=1, wspace=0.2)
+    f.savefig('{}/{}.png'.format(dir, name))
 
 
 class pdb1:
@@ -161,6 +213,20 @@ class pdb1:
         else:
             os.makedirs(self.sub_dir_path)
 
+    async def get_my_app_info(self, unified_url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(unified_url) as resp:
+                info_list = await resp.json()
+                df = pd.DataFrame(info_list)
+                if not df.empty:
+                    df.fillna(0, inplace=True)
+                    android, ios = clean_df(df)
+                    if not android.empty:
+                        output_and_rev_pic(android, self.sub_dir_path, 'android')
+                    if not ios.empty:
+                        output_ios_rev_pic(ios, self.sub_dir_path, 'ios')
+        # return df
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
@@ -194,10 +260,12 @@ if __name__ == '__main__':
 
     pic_tasks = []
     unified_id_url_list = []
+    unified_id_task = []
     for game in g_list:
         p = pdb1(game, dir)
         p.write()
         unified_id_url_list.append(get_unified_id_url(game.unified_id))
+
         if len(game.screenshot_urls) >= 5:
             screenshot_5urls = game.screenshot_urls[:5]
         else:
@@ -205,17 +273,14 @@ if __name__ == '__main__':
         for num, pic in enumerate(screenshot_5urls, start=1):
             pic_tasks.append(asyncio.ensure_future(p.download_pic(pic, num)))
         pic_tasks.append(asyncio.ensure_future(p.download_icon(game.icon_url)))
+        unified_id_task.append(asyncio.ensure_future(p.get_my_app_info(unified_id_url_list.pop())))
 
-    unified_task = []
-    for unified_id_url in unified_id_url_list:
-        unified_task.append(asyncio.ensure_future(get_my_app_info(unified_id_url)))
+
 
     pic_loop = asyncio.get_event_loop()
     pic_loop.run_until_complete(asyncio.wait(pic_tasks))
-
-    unified_loop = asyncio.get_event_loop()
-    unified_loop.run_until_complete(asyncio.wait(unified_task))
-
+    unified_id_url_loop = asyncio.get_event_loop()
+    unified_id_url_loop.run_until_complete(asyncio.wait(unified_id_task))
     t2 = time.time()
     print('Time: ', t2 - t1)
 
