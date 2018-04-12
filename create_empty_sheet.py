@@ -188,7 +188,7 @@ def find_id(imagefolder):
 def checkname(subfolder):
     rightname = []
     subfolder1 = subfolder
-    for i in ':?*/：':
+    for i in ':?*/：:':
         for j in subfolder1:
             if i in j:
                 subfolder1.remove(j)
