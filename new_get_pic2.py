@@ -123,6 +123,7 @@ def output_and_rev_pic(df, dir, name):
     ax2.set(ylabel='')
     f.subplots_adjust(hspace=1, wspace=0.2)
     f.savefig('{}/{}.png'.format(dir, name))
+    del f
 
 
 def output_ios_rev_pic(df, dir, name):
@@ -139,6 +140,7 @@ def output_ios_rev_pic(df, dir, name):
     ax2.set(ylabel='')
     f.subplots_adjust(hspace=1, wspace=0.2)
     f.savefig('{}/{}.png'.format(dir, name))
+    del f
 
 
 class pdb1:
