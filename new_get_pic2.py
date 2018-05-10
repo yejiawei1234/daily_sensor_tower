@@ -159,10 +159,12 @@ class pdb1:
                 f.write(i)
         with open('{}/{}_.txt'.format(self.sub_dir_path, self.game.app_id), 'w') as f:
             f.write('')
-        if int(game.release_date) == 0:
+        if game.release_date is None:
+            # int(game.release_date) == 0 or
             app_time = datetime.today().strftime('%Y-%m-%d')
         else:
-            app_time = datetime.fromtimestamp(game.release_date).strftime('%Y-%m-%d')
+            #app_time = datetime.fromtimestamp(game.release_date).strftime('%Y-%m-%d')
+            app_time = game.release_date[:10]
         with open('{}/{}-.txt'.format(self.sub_dir_path, app_time), 'w') as f:
             f.write('')
 
