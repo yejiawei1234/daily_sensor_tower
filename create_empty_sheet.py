@@ -188,7 +188,7 @@ def find_id(imagefolder):
 def checkname(subfolder):
     rightname = []
     subfolder1 = subfolder
-    for i in ':?*/：:':
+    for i in ':?*/：:【】[]':
         for j in subfolder1:
             if i in j:
                 subfolder1.remove(j)
@@ -197,6 +197,12 @@ def checkname(subfolder):
     rightname.extend(subfolder1)
     return rightname
 
+
+def check_name(gamename):
+    for i in ':?*/：:【】[]':
+        if i in gamename:
+            gamename = gamename.replace(i, ' ')
+    return gamename
 
 def check_data(gameid):
     try:
@@ -297,5 +303,6 @@ input_ = zip(right_sub_folder, sub_folder_path)
 for gamename, imagefolder in input_:
     print(gamename, imagefolder)
     gamename = no_long_name(gamename)
+    gamename = check_name(gamename)
     sheet_main(sheetname=gamename, imagefolder=imagefolder)
 wb.save(output_path)
